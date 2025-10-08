@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inventario de Videojuegos</title>
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 40px;
+          background: #f4f6f9;
+        }
+        h1 {
+          color: #333;
+        }
+        table {
+          border-collapse: collapse;
+          width: 100%;
+          background: white;
+        }
+        th, td {
+          border: 1px solid #ddd;
+          padding: 10px;
+          text-align: left;
+        }
+        th {
+          background-color: #007bff;
+          color: white;
+        }
+        input, button, select {
+          padding: 8px;
+          margin: 5px 0;
+        }
+        .form-container {
+          background: white;
+          padding: 15px;
+          border-radius: 10px;
+          box-shadow: 0 0 5px rgba(0,0,0,0.1);
+          margin-bottom: 40px; /* Espacio uniforme entre secciones */
+        }
+        .section {
+          margin-bottom: 60px; /* Espacio entre tablas y formularios */
+        }
+        button {
+          cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<h1>Inventario de Videojuegos 🎮</h1>
+
+<div class="form-container section">
+    <h2>Agregar nuevo videojuego</h2>
+    <input id="nombre" placeholder="Nombre" />
+    <input id="precio" placeholder="Precio" type="number" step="0.01" />
+    <input id="stock" placeholder="Stock" type="number" />
+    <input id="lanzamiento" placeholder="Fecha de lanzamiento (YYYY-MM-DD)" />
+    <input id="categoria_id" placeholder="ID categoría" type="number" />
+    <input id="consola_id" placeholder="ID consola" type="number" />
+    <button onclick="agregarVideojuego()">Agregar</button>
+</div>
+
+<div class="section">
+    <h2>Lista de Videojuegos</h2>
+    <table id="tablaVideojuegos">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Lanzamiento</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<div class="form-container section">
+    <h2>Agregar nueva consola</h2>
+    <input id="consola_nombre" placeholder="Nombre consola" />
+    <button onclick="agregarConsola()">Agregar Consola</button>
+</div>
+
+<div class="section">
+    <h2>Lista de Consolas</h2>
+    <table id="tablaConsolas">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script>
+    const API_VIDEOJUEGOS = "http://localhost:8080/api/videojuegos";
+    const API_CONSOLAS = "http://localhost:8080/api/consolas";
+
+    // ===== VIDEOJUEGOS =====
+    async function cargarVideojuegos() {
+      const res = await fetch(API_VIDEOJUEGOS);
+      const data = await res.json();
+      const tbody = document.querySelector("#tablaVideojuegos tbody");
+      tbody.innerHTML = "";
+      data.forEach(v => {
+        const row = `
+          <tr>
+            <td>${v.id}</td>
+            <td>${v.nombre}</td>
+            <td>$${v.precio}</td>
+            <td>${v.stock}</td>
+            <td>${v.lanzamiento || ""}</td>
+            <td><button onclick="eliminarVideojuego(${v.id})">Eliminar</button></td>
+          </tr>
+        `;
+        tbody.innerHTML += row;
+      });
+    }
+
+    async function agregarVideojuego() {
+      const videojuego = {
+        nombre: document.getElementById("nombre").value,
+        precio: parseFloat(document.getElementById("precio").value),
+        stock: parseInt(document.getElementById("stock").value),
+        lanzamiento: document.getElementById("lanzamiento").value || null,
+        categoria: { id: parseInt(document.getElementById("categoria_id").value) },
+        consola: { id: parseInt(document.getElementById("consola_id").value) }
+      };
+
+      const res = await fetch(API_VIDEOJUEGOS, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(videojuego)
+      });
+
+      if (res.ok) {
+        alert("Videojuego agregado correctamente");
+        cargarVideojuegos();
+      } else {
+        alert("Error al agregar el videojuego");
+      }
+    }
+
+    async function eliminarVideojuego(id) {
+      if (confirm("¿Seguro que deseas eliminar este videojuego?")) {
+        const res = await fetch(`${API_VIDEOJUEGOS}/${id}`, { method: "DELETE" });
+        if (res.ok) {
+          alert("Videojuego eliminado");
+          cargarVideojuegos();
+        } else {
+          alert("Error al eliminar el videojuego");
+        }
+      }
+    }
+
+    // ===== CONSOLAS =====
+    async function cargarConsolas() {
+      const res = await fetch(API_CONSOLAS);
+      const data = await res.json();
+      const tbody = document.querySelector("#tablaConsolas tbody");
+      tbody.innerHTML = "";
+      data.forEach(c => {
+        const row = `
+          <tr>
+            <td>${c.id}</td>
+            <td>${c.nombre}</td>
+          </tr>
+        `;
+        tbody.innerHTML += row;
+      });
+    }
+
+    async function agregarConsola() {
+      const consola = {
+        nombre: document.getElementById("consola_nombre").value
+      };
+
+      const res = await fetch(API_CONSOLAS, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(consola)
+      });
+
+      if (res.ok) {
+        alert("Consola agregada correctamente");
+        document.getElementById("consola_nombre").value = "";
+        cargarConsolas();
+      } else {
+        alert("Error al agregar la consola");
+      }
+    }
+
+    // Carga inicial
+    cargarVideojuegos();
+    cargarConsolas();
+</script>
+</body>
+</html>

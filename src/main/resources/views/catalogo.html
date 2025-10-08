@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Videojuegos</title>
+    <style>
+        body {
+          font-family: "Segoe UI", sans-serif;
+          background: #f4f4f4;
+          margin: 0;
+          padding: 0;
+        }
+
+        header {
+          background-color: #007bff;
+          color: white;
+          padding: 15px;
+          text-align: center;
+        }
+
+        h1 {
+          margin: 0;
+          font-size: 1.8em;
+        }
+
+        main {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 20px;
+          padding: 30px;
+        }
+
+        .card {
+          background: white;
+          border-radius: 10px;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+          padding: 15px;
+          transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+          transform: translateY(-5px);
+        }
+
+        .card h3 {
+          color: #333;
+          margin-bottom: 10px;
+        }
+
+        .price {
+          color: #28a745;
+          font-weight: bold;
+          margin-bottom: 5px;
+        }
+
+        .stock {
+          color: #555;
+          font-size: 0.9em;
+        }
+
+        footer {
+          text-align: center;
+          padding: 15px;
+          background: #007bff;
+          color: white;
+          position: fixed;
+          width: 100%;
+          bottom: 0;
+        }
+
+        .loading {
+          text-align: center;
+          font-size: 1.2em;
+          color: #555;
+          padding: 40px;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>🎮 Catálogo de Videojuegos</h1>
+</header>
+
+<main id="catalogo">
+    <div class="loading">Cargando catálogo...</div>
+</main>
+
+<footer>
+    © 2025 - Inventario de Videojuegos (Demo)
+</footer>
+
+<script>
+    const API_URL = "http://localhost:8080/api/videojuegos";
+
+    async function cargarCatalogo() {
+      const main = document.getElementById("catalogo");
+
+      try {
+        const res = await fetch(API_URL);
+        if (!res.ok) throw new Error("No se pudo cargar el catálogo");
+
+        const data = await res.json();
+        main.innerHTML = "";
+
+        if (data.length === 0) {
+          main.innerHTML = "<div class='loading'>No hay videojuegos en el catálogo</div>";
+          return;
+        }
+
+        data.forEach(v => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <h3>${v.nombre}</h3>
+            <div class="price">💲 ${v.precio.toFixed(2)}</div>
+            <div class="stock">Stock: ${v.stock}</div>
+            <div>📅 Lanzamiento: ${v.lanzamiento}</div>
+            <div>🕹️ Categoría ID: ${v.categoria?.id || "-"}</div>
+            <div>🎮 Consola ID: ${v.consola?.id || "-"}</div>
+          `;
+          main.appendChild(card);
+        });
+      } catch (error) {
+        main.innerHTML = `<div class='loading'>⚠️ Error al cargar los datos: ${error.message}</div>`;
+      }
+    }
+
+    cargarCatalogo();
+</script>
+</body>
+</html>
